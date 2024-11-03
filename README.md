@@ -4,6 +4,10 @@ A new Flutter project.
 
 WeatherDashBoard based on Flutter.
 
+## 环境搭建
+
+文档: https://docs.flutter.cn/get-started/install
+
 ## 项目环境
 
 ```
