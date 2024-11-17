@@ -9,13 +9,12 @@ class WeatherRepository {
   // TODO 未来可添加多种service
 
   WeatherRepository({
-    required this.currentWeatherService,
+    required this.currentWeatherService
   });
 
   Future<CurrentWeatherModel> getCurrentWeather(double latitude, double longitude) {
     return currentWeatherService.fetchWeatherData(latitude, longitude);
   }
-
   // Future<WeatherForecastModel> getForecastWeather(double latitude, double longitude) {
   //   return forecastWeatherService.fetchForecastWeather(latitude, longitude);
   // }

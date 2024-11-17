@@ -20,11 +20,12 @@ class CurrentWeatherService {
 }
 
 // debug test
-void main() async {
-  try {
-    final currentWeatherModel = await CurrentWeatherService().fetchWeatherData(34, 108);
-    print("test");
-  } catch (e) {
-    print(e);
-  }
-}
+// void main() async {
+//   try {
+//     final currentWeatherModel = await CurrentWeatherService().fetchWeatherData(34, 108);
+//     print("test");
+//   } catch (e) {
+//     print(e);
+//   }
+// }
+

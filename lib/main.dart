@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:weatherdashboard/ui/screens/dashboard_screen.dart';
+import 'package:weatherdashboard/ui//screens/dashboard_screen.dart'; // 导入 DashboardScreen
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget{
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false, // 去掉调试标志
       title: 'Weather Dashboard',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: DashboardScreen(latitude: 34.0, longitude: 108.0), // 传入经纬度
+      home: const DashboardScreen(), // 设置主页面为 DashboardScreen
     );
   }
 }

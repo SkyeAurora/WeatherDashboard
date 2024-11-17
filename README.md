@@ -251,7 +251,7 @@ class MyApp extends StatelessWidget{
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: DashboardScreen(latitude: 34.0, longitude: 108.0), // 传入经纬度
+      home: DashboardScreen(latitude: 34.128, longitude: 108.832), // 传入经纬度
     );
   }
 }
@@ -259,3 +259,202 @@ class MyApp extends StatelessWidget{
 
 ![跑通](https://huaperion-blog-pic.oss-cn-beijing.aliyuncs.com/Blog/202411031657527.jpg)
 
+## 定位服务实现
+
+1. 安装依赖
+
+在`pubspec.ymal`中添加以下依赖
+```ymal
+dependencies:
+  geolocator: ^10.0.1
+  permission_handler: ^11.0.0
+
+```
+
+然后运行`flutter pub get`安装依赖
+
+2. 配置权限
+
+**Android**
+
+- 修改`AndroidManifest.xml`在`android/app/src/main/AndroidManifest.xml`文件中添加以下权限: 
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+- 确保`minSdkVersion`为 21或更高,在`android/app/build.gradle`中:
+```gradle
+defaultConfig {
+    minSdkVersion 21
+}
+```
+
+**IOS**
+
+- 修改`ios/Runner/Info.plist`: 在`Info.plist`文件中添加以下内容:
+
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location to provide weather updates</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>We need your location to provide weather updates</string>
+```
+
+**Chrome**
+
+浏览器访问地理定位API需要HTTPS或者localhost，否则会因为安全限制而失败。
+
+- 本地开发：
+使用`flutter run -d chrome`命令运行时，Flutter 默认会通过 localhost 提供服务，无需额外配置。
+- 生产环境：
+部署时确保使用 HTTPS。
+
+在使用时浏览器会弹出权限提示，确保正常授权即可。
+
+3. 定位服务实现 
+
+编写定位逻辑:
+```dart
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+class LocationService {
+  Future<Position?> getCurrentLocation() async {
+    // 检查定位权限
+    if (await _handleLocationPermission()) {
+      try {
+        // 获取当前位置
+        return await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+      } catch (e) {
+        print("Error getting location: $e");
+        return null;
+      }
+    }
+    return null;
+  }
+
+  Future<bool> _handleLocationPermission() async {
+    final status = await Permission.locationWhenInUse.request();
+    if (status.isGranted) {
+      return true;
+    } else {
+      print("Location permission denied.");
+      return false;
+    }
+  }
+}
+```
+
+4. 项目集成
+
+在`lib/ui/screens/dashboard_screen.dart`中直接编写定位服务，后序可以单独拉出来做一个service:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart'; // 导入定位插件
+import 'package:weatherdashboard/repository/weather_repository.dart';
+import 'package:weatherdashboard/bloc/weather_bloc.dart';
+import '../widgets/weather_card.dart';
+import 'package:weatherdashboard/network/services/current_weather_service.dart'; // 导入天气服务
+
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  double? _latitude;
+  double? _longitude;
+  bool _isLoadingLocation = true; // 定位加载状态
+
+  @override
+  void initState() {
+    super.initState();
+    _getLocation(); // 初始化时获取位置
+  }
+
+  // 获取位置
+  Future<void> _getLocation() async {
+    try {
+      // 检查定位服务是否启用
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception("Location services are disabled.");
+      }
+
+      // 检查并请求权限
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception("Location permissions are denied.");
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+            "Location permissions are permanently denied, we cannot request permissions.");
+      }
+
+      // 获取当前位置
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+        _isLoadingLocation = false; // 定位加载完成
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingLocation = false; // 定位失败
+      });
+      // 显示错误信息
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Weather Dashboard")),
+      body: _isLoadingLocation
+          ? Center(child: CircularProgressIndicator()) // 显示定位加载动画
+          : _latitude != null && _longitude != null
+              ? BlocProvider(
+                  create: (context) => WeatherBloc(
+                      repository: WeatherRepository(
+                          currentWeatherService: CurrentWeatherService()))
+                    ..add(FetchWeather(
+                        latitude: _latitude!, longitude: _longitude!)),
+                  child: BlocBuilder<WeatherBloc, WeatherState>(
+                    builder: (context, state) {
+                      if (state is WeatherLoading) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (state is WeatherLoaded) {
+                        return WeatherCard(weather: state.weather);
+                      } else if (state is WeatherError) {
+                        return Center(child: Text(state.message));
+                      }
+                      return Container();
+                    },
+                  ),
+                )
+              : Center(
+                  child: Text(
+                    "Unable to fetch location data. Please enable location services.",
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+    );
+  }
+}
+```
+
+5. 结果展示
+
+![](https://huaperion-blog-pic.oss-cn-beijing.aliyuncs.com/Blog/202411171128222.png)
