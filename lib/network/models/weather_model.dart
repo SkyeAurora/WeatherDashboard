@@ -60,10 +60,13 @@ class Coord {
 
   factory Coord.fromJson(Map<String, dynamic> json) {
     return Coord(
-      lon: json['lon'],
-      lat: json['lat'],
+      lon: json['lon']?.toDouble() ?? 0.0,
+      lat: json['lat']?.toDouble() ?? 0.0,
     );
   }
+
+  // 格式化的经纬度字符串，保留一位小数
+  String get formattedLocation => '(${lat.toStringAsFixed(1)}, ${lon.toStringAsFixed(1)})';
 }
 
 class Weather {

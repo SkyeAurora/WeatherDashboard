@@ -17,14 +17,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 去掉调试标志
       title: 'Weather Dashboard',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      // ),
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: bgColor,
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: secondaryColor,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
-            .apply(bodyColor: Colors.white),
+            .apply(bodyColor: Colors.black87), // 使用更深的颜色以提高对比度
         canvasColor: secondaryColor,
+        appBarTheme: AppBarTheme(
+          backgroundColor: bgColor, // 应用栏背景色
+          elevation: 0, // 移除阴影
+        ),
       ),
       // home: const DashboardScreen(), // 设置主页面为 DashboardScreen
       home: MultiProvider(
