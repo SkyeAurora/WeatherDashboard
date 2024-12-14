@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:weatherdashboard/ui/screens/weather_screen.dart';
 import 'constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherdashboard/Controller/menu_app_controller.dart';
-import 'package:weatherdashboard/ui/screens/dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,19 +22,19 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
             .apply(bodyColor: Colors.black87), // 使用更深的颜色以提高对比度
         canvasColor: secondaryColor,
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: bgColor, // 应用栏背景色
           elevation: 0, // 移除阴影
         ),
       ),
-      // home: const DashboardScreen(), // 设置主页面为 DashboardScreen
+
       home: MultiProvider(
         providers: [
           ChangeNotifierProvider(
             create: (context) => MenuAppController(),
           ),
         ],
-        child: DashboardScreen(),
+        child: const WeatherScreen(),
       ),
     );
   }
