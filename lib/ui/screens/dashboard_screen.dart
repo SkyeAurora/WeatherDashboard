@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart'; // 导入定位插件
 import 'package:weatherdashboard/constants.dart';
-import 'package:weatherdashboard/repository/weather_repository.dart';
-import 'package:weatherdashboard/bloc/weather_bloc.dart';
 import '../widgets/weather_card.dart';
 import 'package:weatherdashboard/network/services/current_weather_service.dart'; // 导入天气服务
-import 'package:weatherdashboard/responsive.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
