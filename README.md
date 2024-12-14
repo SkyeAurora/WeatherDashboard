@@ -349,7 +349,7 @@ class LocationService {
 
 4. 项目集成
 
-在`lib/ui/screens/dashboard_screen.dart`中直接编写定位服务，后序可以单独拉出来做一个service:
+在`lib/ui/screens/dashboard_screen.dart`中直接编写定位服务，后续可以单独拉出来做一个service:
 
 ```dart
 import 'package:flutter/material.dart';

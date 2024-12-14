@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:weatherdashboard/ui//screens/dashboard_screen.dart'; // 导入 DashboardScreen
-import 'package:weatherdashboard/constants.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'package:weatherdashboard/Controller/menu_app_controller.dart';
+import 'package:weatherdashboard/ui/screens/weather_screen.dart';
+import '';
 
 void main() {
   runApp(const MyApp());
