@@ -50,6 +50,24 @@ class CurrentWeatherModel {
       cod: json['cod'],
     );
   }
+
+  @override
+  String toString() {
+    return
+        '  ${coord.formattedLocation},\n'
+        '  $weather, \n'
+        '  base: $base,\n'
+        '  $main,\n'
+        '  能见度: $visibility,\n'
+        '  wind: $wind,\n'
+        '  clouds: $clouds,\n'
+        '  dt: $dt,\n'
+        '  sys: $sys,\n'
+        '  timezone: $timezone,\n'
+        '  id: $id,\n'
+        '  name: $name,\n'
+        '  cod: $cod\n';
+  }
 }
 
 class Coord {
@@ -66,7 +84,7 @@ class Coord {
   }
 
   // 格式化的经纬度字符串，保留一位小数
-  String get formattedLocation => '(${lat.toStringAsFixed(1)}, ${lon.toStringAsFixed(1)})';
+  String get formattedLocation => ' (${lat.toStringAsFixed(1)}, ${lon.toStringAsFixed(1)})';
 }
 
 class Weather {
@@ -90,6 +108,10 @@ class Weather {
       icon: json['icon'],
     );
   }
+
+  @override
+  String toString() =>
+      'weather: id: $id,  main: $main,  description: $description,  icon: $icon';
 }
 
 class Main {
@@ -125,6 +147,14 @@ class Main {
       grndLevel: json['grnd_level'] ?? 0.0,
     );
   }
+
+  int get formattedTempMax => (tempMax - 273.15).toInt();
+  int get formattedTempMin => (tempMin - 273.15).toInt();
+  String get formattedFeelTemp => '${(feelsLike - 273.15).toStringAsFixed(1)}°C';
+
+  @override
+  String toString() =>
+      'main: [temp: $temp,  feelsLike: $feelsLike,  tempMin: $tempMin,  tempMax: $tempMax,  pressure: $pressure,  humidity: $humidity]';
 }
 
 class Wind {
@@ -145,6 +175,8 @@ class Wind {
       gust: json['gust'] ?? 0.0,
     );
   }
+  @override
+  String toString() => '[speed: $speed,  deg: $deg]';
 }
 
 class Clouds {
@@ -157,6 +189,8 @@ class Clouds {
       all: json['all'],
     );
   }
+  @override
+  String toString() => ' all: $all';
 }
 
 class Sys {
@@ -177,4 +211,7 @@ class Sys {
       sunset: json['sunset'],
     );
   }
+  @override
+  String toString() =>
+      '[country: $country,  sunrise: $sunrise,  sunset: $sunset]';
 }

@@ -4,7 +4,7 @@ import 'package:weatherdashboard/network/models/forecast_weather_model.dart';
 class ForecastWeatherCard extends StatelessWidget {
   final ForecastWeather forecast;
 
-  const ForecastWeatherCard({Key? key, required this.forecast}) : super(key: key);
+  const ForecastWeatherCard({Key? key, required this. forecast}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

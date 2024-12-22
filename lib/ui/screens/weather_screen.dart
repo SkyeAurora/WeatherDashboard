@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:weatherdashboard/constants.dart';
 import 'package:weatherdashboard/network/services/air_pollution_service.dart';
 import 'package:weatherdashboard/network/services/current_weather_service.dart';
 import 'package:weatherdashboard/network/services/forecast_weather_service.dart';
+import 'package:weatherdashboard/ui/widgetSections/body_leftpart_linechart.dart';
+import 'package:weatherdashboard/ui/widgetSections/body_rightpart.dart';
 import 'package:weatherdashboard/ui/widgets/air_pollution_card.dart';
 import 'package:weatherdashboard/ui/widgets/weather_card.dart';
 import 'package:weatherdashboard/ui/widgets/forecast_weather_card.dart';
@@ -102,7 +106,19 @@ class _WeatherScreenState extends State<WeatherScreen> {
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
-            child: _buildContent(), // 主要内容
+            child: Column(
+              children: [
+                _buildContent(),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _buildLeftBody(),
+                    ),
+                  ],
+                )
+              ],
+            ), // 主要内容
           ),
           SliverFillRemaining(
             hasScrollBody: false,
@@ -120,8 +136,48 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
+  // 📍 天气预报的标题
+  // Widget _buildAirPollutionCard() {
+  //   return FutureBuilder(
+  //     future: _airPollutionFuture,
+  //     builder: (context,snapshot){
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         return const Center(child: CircularProgressIndicator());
+  //       } else if (snapshot.hasError) {
+  //         return Center(child: Text('加载天气污染数据失败: ${snapshot.error}'));
+  //       } else if (snapshot.hasData) {
+  //         return AirPollutionCard(airPollutionModel: snapshot.data);
+  //       } else {
+  //         return const Center(child: Text('未能加载天气污染数据'));
+  //       }
+  //     },
+  //   );
+  // }
+
+  // 📍 未来天气的展示卡片（每3小时一条）
+  Widget _buildLeftBody() {
+    return  FutureBuilder(
+      future: _forecastWeatherFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('加载天气预报数据失败: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          final forecastList = snapshot.data.list;
+          return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 100),
+              child: BodyLeftpartLinechart(weather: forecastList),
+            );
+        } else {
+          return const Center(child: Text('未能加载天气预报数据'));
+        }
+      },
+    );
+  }
+
+  // 📍 当前天气的展示卡片
   Widget _buildContent() {
-    // 📍 当前天气的展示卡片
     return FutureBuilder(
       future: _currentWeatherFuture,
       builder: (context, snapshot) {
@@ -147,78 +203,3 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 }
-// return Scaffold(
-//   appBar: AppBar(
-//     title: const Text('Weather Dashboard'),
-//   ),
-//   body: SingleChildScrollView(
-//     child: Column(
-//       children: [
-//         const SizedBox(height: 16),
-//
-//         const Text(
-//           '当前天气预报',
-//           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-//         ),
-//
-//         const SizedBox(height: 24),
-//
-//         const Text(
-//           '天气污染数据',
-//           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-//         ),
-//
-//         const SizedBox(height: 8),
-//
-//         FutureBuilder(
-//           future: _airPollutionFuture,
-//           builder: (context,snapshot){
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return const Center(child: CircularProgressIndicator());
-//             } else if (snapshot.hasError) {
-//               return Center(child: Text('加载天气污染数据失败: ${snapshot.error}'));
-//             } else if (snapshot.hasData) {
-//               return AirPollutionCard(airPollutionModel: snapshot.data);
-//             } else {
-//               return const Center(child: Text('未能加载天气污染数据'));
-//             }
-//           },
-//         ),
-//
-//         const SizedBox(height: 24),
-//
-//         // 📍 天气预报的标题
-//         const Text(
-//           '未来天气预报',
-//           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-//         ),
-//
-//         const SizedBox(height: 8),
-//
-//         // 📍 未来天气的展示卡片（每3小时一条）
-//         FutureBuilder(
-//           future: _forecastWeatherFuture,
-//           builder: (context, snapshot) {
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return const Center(child: CircularProgressIndicator());
-//             } else if (snapshot.hasError) {
-//               return Center(child: Text('加载天气预报数据失败: ${snapshot.error}'));
-//             } else if (snapshot.hasData) {
-//               final forecastList = snapshot.data.list;
-//               return ListView.builder(
-//                 shrinkWrap: true,
-//                 physics: const NeverScrollableScrollPhysics(), // 禁止内部滚动
-//                 itemCount: forecastList.length,
-//                 itemBuilder: (context, index) {
-//                   return ForecastWeatherCard(forecast: forecastList[index]);
-//                 },
-//               );
-//             } else {
-//               return const Center(child: Text('未能加载天气预报数据'));
-//             }
-//           },
-//         ),
-//       ],
-//     ),
-//   ),
-// );
