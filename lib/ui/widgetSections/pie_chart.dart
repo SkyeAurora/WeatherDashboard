@@ -24,7 +24,7 @@ class PieChart extends StatelessWidget {
       minTemps.add(forecast.main.tempMin - 273.15);
     }
 
-    return PieChart(
+    return LineChartData(
       lineBarsData: [
         LineChartBarData(
           spots: List.generate(
