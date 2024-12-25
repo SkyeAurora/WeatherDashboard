@@ -3,7 +3,11 @@ class LocationModel {
   final double lng;
 
   LocationModel({required this.lat, required this.lng});
-
+  factory LocationModel.fromDouble(double lat,double lng)
+  {
+    return LocationModel(lat: lat, lng: lng);
+  }
+  
   factory LocationModel.fromJson(Map<String, dynamic> json) {
     // 解析 location 字符串并分割成经纬度
     final location = json['geocodes'][0]['location'].split(',');

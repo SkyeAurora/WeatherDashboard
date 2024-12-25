@@ -1,15 +1,20 @@
 import 'dart:math';
-
+import '../../network/models/weather_model.dart';
 import 'package:flutter/material.dart';
 import 'package:weatherdashboard/constants.dart';
+import 'package:weatherdashboard/network/models/location_model.dart';
 import 'package:weatherdashboard/network/services/air_pollution_service.dart';
 import 'package:weatherdashboard/network/services/current_weather_service.dart';
 import 'package:weatherdashboard/network/services/forecast_weather_service.dart';
+import 'package:weatherdashboard/network/services/geocoding_service.dart';
 import 'package:weatherdashboard/ui/widgetSections/body_leftpart_linechart.dart';
 import 'package:weatherdashboard/ui/widgetSections/body_rightpart.dart';
 import 'package:weatherdashboard/ui/widgets/air_pollution_card.dart';
+import 'package:weatherdashboard/ui/widgets/top_bar.dart';
 import 'package:weatherdashboard/ui/widgets/weather_card.dart';
 import 'package:weatherdashboard/ui/widgets/forecast_weather_card.dart';
+import './video_background_page.dart';
+import 'package:video_player/video_player.dart';
 
 class WeatherDashboardApp extends StatelessWidget {
   const WeatherDashboardApp({Key? key}) : super(key: key);
@@ -34,74 +39,43 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  final double latitude = 32.1299; // 这里可以设置为当前的纬度
-  final double longitude = 108.8278; // 这里可以设置为当前的经度
-
+  LocationModel locationModel=LocationModel(lat: 32.1299,lng: 108.8278);
   late Future<dynamic> _currentWeatherFuture;
   late Future<dynamic> _forecastWeatherFuture;
   late Future<dynamic> _airPollutionFuture;
-
   @override
   void initState() {
     super.initState();
     _currentWeatherFuture =
-        CurrentWeatherService().fetchWeatherData(latitude, longitude);
+        CurrentWeatherService().fetchWeatherData(locationModel.lat, locationModel.lng);
     _forecastWeatherFuture =
-        ForecastWeatherService().fetchForecastWeatherData(latitude, longitude);
+        ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
     _airPollutionFuture =
-        AirPollutionService().fetchAirPollutionData(latitude, longitude);
+        AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);
+
+  }
+
+  void _handleCitySearch(String cityName) async{
+    Future<LocationModel>_locationFuture = GeocodingService().fetchFGeocodingData(cityName);
+    locationModel =await _locationFuture;
+    _currentWeatherFuture =
+        CurrentWeatherService().fetchWeatherData(locationModel.lat, locationModel.lng);
+    CurrentWeatherModel currentWeatherModel1=await _currentWeatherFuture;
+    currentWeatherModel1.name=cityName;
+    setState(() {
+    _currentWeatherFuture=Future.value(currentWeatherModel1);
+    _forecastWeatherFuture =
+        ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
+    _airPollutionFuture =
+        AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);  
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 200.0),
-            child: Row (
-              children: <Widget>[
-                const Expanded(
-                    flex: 1,
-                    child: Column (
-                      crossAxisAlignment: CrossAxisAlignment.center, // 对齐方式
-                      children: [
-                        Text("天气预报仪表盘", style: TextStyle(color: titleFontColor),),
-                        Text("Weather DashBoard", style: TextStyle(color: titleFontColor),),
-                      ],
-                    )
-                ),
-
-                const Expanded(flex: 1, child: Text("")),
-
-                // 顶部Bar
-                Expanded(
-                  flex: 1,
-                  child: TextField(
-                    cursorColor: Colors.white, // 设置光标颜色为白色
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search, color: Colors.white), // 设置图标颜色为白色
-                      hintText: "输入城市名称查询天气",
-                      hintStyle: const TextStyle(color: Colors.white), // 设置提示文本颜色为白色
-                      filled: false, // 启用填充背景
-                      fillColor: Colors.white, // 设置背景颜色为白色
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.white), // 设置边框颜色为白色
-                        borderRadius: BorderRadius.circular(8.0), // 圆角边框
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.grey, width: 1.0), // 未聚焦时的边框颜色
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.white, width: 1.0), // 聚焦时的边框颜色
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
+      appBar: TopBar(
+        onCitySearch: _handleCitySearch,
       ),
       body: CustomScrollView(
         slivers: [
@@ -126,7 +100,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               alignment: Alignment.bottomCenter,
               child: Container(
                   height: 60,
-                  color: bgColor, // 设置矩形的颜色
+                  color: const Color.fromARGB(255, 106, 61, 165), // 设置矩形的颜色
                   child: _buildBottomInfoView()
               ),
             ),
@@ -135,25 +109,28 @@ class _WeatherScreenState extends State<WeatherScreen> {
       ),
     );
   }
+ 
+ 
+  // 📍 当前天气的展示卡片
+  Widget _buildContent() {
+    return FutureBuilder(
+      future: _currentWeatherFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('加载当前天气数据失败: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          return WeatherCard(weather: snapshot.data);
+        } else {
+          return const Center(child: Text('未能加载当前天气数据'));
+        }
+      },
+    );
+  }
 
-  // 📍 天气预报的标题
-  // Widget _buildAirPollutionCard() {
-  //   return FutureBuilder(
-  //     future: _airPollutionFuture,
-  //     builder: (context,snapshot){
-  //       if (snapshot.connectionState == ConnectionState.waiting) {
-  //         return const Center(child: CircularProgressIndicator());
-  //       } else if (snapshot.hasError) {
-  //         return Center(child: Text('加载天气污染数据失败: ${snapshot.error}'));
-  //       } else if (snapshot.hasData) {
-  //         return AirPollutionCard(airPollutionModel: snapshot.data);
-  //       } else {
-  //         return const Center(child: Text('未能加载天气污染数据'));
-  //       }
-  //     },
-  //   );
-  // }
 
+  
   // 📍 未来天气的展示卡片（每3小时一条）
   Widget _buildLeftBody() {
     return  FutureBuilder(
@@ -175,25 +152,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
       },
     );
   }
-
-  // 📍 当前天气的展示卡片
-  Widget _buildContent() {
-    return FutureBuilder(
-      future: _currentWeatherFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('加载当前天气数据失败: ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          return WeatherCard(weather: snapshot.data);
-        } else {
-          return const Center(child: Text('未能加载当前天气数据'));
-        }
-      },
-    );
-  }
-
   Widget _buildBottomInfoView() {
     return const Center(//0xFFA5A3A3
       child: Text(

@@ -12,7 +12,7 @@ class CurrentWeatherModel {
   final Sys sys;
   final int timezone;
   final int id;
-  final String name;
+   String name;
   final int cod;
 
   CurrentWeatherModel({

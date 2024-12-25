@@ -23,6 +23,7 @@ class WeatherCard extends StatelessWidget {
         ],
       ),
     );
+    
   }
 
 }
