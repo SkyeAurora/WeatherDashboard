@@ -39,53 +39,74 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  LocationModel locationModel = LocationModel(lat: 32.1299,lng: 108.8278);
+  LocationModel locationModel = LocationModel(lat: 32.1299, lng: 108.8278);
   late Future<dynamic> _currentWeatherFuture;
   late Future<dynamic> _forecastWeatherFuture;
   late Future<dynamic> _airPollutionFuture;
-  String _currentWeatherCondition = 'clouds'; // 默认值为常见的天气状态
-  
+  String _currentWeatherCondition = 'clouds';
+  bool _isLoading = false;  // 添加加载状态标志
+
   @override
   void initState() {
     super.initState();
-    _currentWeatherFuture =
-        CurrentWeatherService().fetchWeatherData(locationModel.lat, locationModel.lng);
-    _updateInitialWeather(); // 添加初始天气状态更新
-    _forecastWeatherFuture =
-        ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
-    _airPollutionFuture =
-        AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);
+    _initializeData();
   }
 
-  // 添加新方法来更新初始天气状态
-  void _updateInitialWeather() async {
+  // 将初始化逻辑抽取到单独的方法
+  Future<void> _initializeData() async {
     try {
+      _currentWeatherFuture = CurrentWeatherService()
+          .fetchWeatherData(locationModel.lat, locationModel.lng);
+      
       final weatherData = await _currentWeatherFuture;
       if (mounted) {
         setState(() {
           _currentWeatherCondition = weatherData.weather[0].main.toLowerCase();
         });
       }
+
+      _forecastWeatherFuture = ForecastWeatherService()
+          .fetchForecastWeatherData(locationModel.lat, locationModel.lng);
+      _airPollutionFuture = AirPollutionService()
+          .fetchAirPollutionData(locationModel.lat, locationModel.lng);
     } catch (e) {
-      print('Error updating initial weather: $e');
+      print('Error initializing data: $e');
     }
   }
 
-  void _handleCitySearch(String cityName) async{
-    Future<LocationModel>_locationFuture = GeocodingService().fetchFGeocodingData(cityName);
-    locationModel =await _locationFuture;
-    _currentWeatherFuture =
-        CurrentWeatherService().fetchWeatherData(locationModel.lat, locationModel.lng);
-    CurrentWeatherModel currentWeatherModel1=await _currentWeatherFuture;
-    currentWeatherModel1.name=cityName;
+  Future<void> _handleCitySearch(String cityName) async {
+    if (_isLoading) return;  // 如果正在加载，直接返回
+    
     setState(() {
-      _currentWeatherCondition = currentWeatherModel1.weather[0].main.toLowerCase();
-      _currentWeatherFuture=Future.value(currentWeatherModel1);
-      _forecastWeatherFuture =
-          ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
-      _airPollutionFuture =
-          AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);  
+      _isLoading = true;
     });
+
+    try {
+      final locationFuture = GeocodingService().fetchFGeocodingData(cityName);
+      locationModel = await locationFuture;
+
+      final currentWeather = await CurrentWeatherService()
+          .fetchWeatherData(locationModel.lat, locationModel.lng);
+      
+      currentWeather.name = cityName;
+
+      setState(() {
+        _currentWeatherCondition = currentWeather.weather[0].main.toLowerCase();
+        _currentWeatherFuture = Future.value(currentWeather);
+        _forecastWeatherFuture = ForecastWeatherService()
+            .fetchForecastWeatherData(locationModel.lat, locationModel.lng);
+        _airPollutionFuture = AirPollutionService()
+            .fetchAirPollutionData(locationModel.lat, locationModel.lng);
+      });
+    } catch (e) {
+      print('Error searching city: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
