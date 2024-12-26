@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import '../../network/models/weather_model.dart';
 import 'package:flutter/material.dart';
 import 'package:weatherdashboard/constants.dart';
@@ -124,7 +125,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return VideoBackgroundPage(
       weatherCondition: _currentWeatherCondition,
       child: Scaffold(
-        backgroundColor: Colors.transparent, // 使 Scaffold 背景透明
+        backgroundColor: Colors.transparent,
         appBar: TopBar(
           onCitySearch: _handleCitySearch,
         ),
@@ -143,16 +144,24 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     ],
                   )
                 ],
-              ), // 主要内容
+              ),
             ),
             SliverFillRemaining(
               hasScrollBody: false,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
-                    height: 60,
-                    color: const Color.fromARGB(255, 106, 61, 165), // 设置矩形的颜色
-                    child: _buildBottomInfoView()
+                  height: 60,
+                  color: Colors.transparent,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.2),
+                        child: _buildBottomInfoView(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -238,10 +247,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
   Widget _buildBottomInfoView() {
-    return const Center(//0xFFA5A3A3
-      child: Text(
-        "开发者：张家和 & 张佳伟 & 张志伟 | Api调用：https://api.openweathermap.org",
-        style: TextStyle(color: titleFontColor),
+    return Container(
+      color: Colors.black.withOpacity(0.3), // 半透明黑色背景
+      height: 60,
+      child: const Center(
+        child: Text(
+          "开发者：张家和 & 张佳伟 & 张志伟 | Api调用：https://api.openweathermap.org",
+          style: TextStyle(
+            color: Colors.white70, // 降低文字不透明度
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

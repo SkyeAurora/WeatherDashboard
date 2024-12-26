@@ -47,6 +47,8 @@ class _TopBarState extends State<TopBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 200.0),
         child: Column(
@@ -54,32 +56,33 @@ class _TopBarState extends State<TopBar> {
             TextField(
               controller: _cityController,
               cursorColor: Colors.white,
-              enabled: !_isSearching, // 搜索时禁用输入
+              enabled: !_isSearching,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
                 suffixIcon: _isSearching 
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Colors.white70,
                         ),
                       )
                     : null,
                 hintText: _isSearching ? "搜索中..." : "输入城市名称查询天气",
-                hintStyle: const TextStyle(color: Colors.white),
-                filled: false,
+                hintStyle: const TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
                 border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white, width: 1.0),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
