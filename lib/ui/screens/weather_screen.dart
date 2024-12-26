@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import '../../network/models/weather_model.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
     _initializeData();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   // 将初始化逻辑抽取到单独的方法
   Future<void> _initializeData() async {
     try {
@@ -75,7 +81,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 
   Future<void> _handleCitySearch(String cityName) async {
-    if (_isLoading) return;  // 如果正在加载，直接返回
+    if (_isLoading) return;
     
     setState(() {
       _isLoading = true;
@@ -85,18 +91,22 @@ class _WeatherScreenState extends State<WeatherScreen> {
       final locationFuture = GeocodingService().fetchFGeocodingData(cityName);
       locationModel = await locationFuture;
 
-      final currentWeather = await CurrentWeatherService()
+      // 并行获取所有数据
+      final currentWeatherFuture = CurrentWeatherService()
           .fetchWeatherData(locationModel.lat, locationModel.lng);
-      
+      final forecastFuture = ForecastWeatherService()
+          .fetchForecastWeatherData(locationModel.lat, locationModel.lng);
+      final pollutionFuture = AirPollutionService()
+          .fetchAirPollutionData(locationModel.lat, locationModel.lng);
+
+      final currentWeather = await currentWeatherFuture;
       currentWeather.name = cityName;
 
       setState(() {
         _currentWeatherCondition = currentWeather.weather[0].main.toLowerCase();
         _currentWeatherFuture = Future.value(currentWeather);
-        _forecastWeatherFuture = ForecastWeatherService()
-            .fetchForecastWeatherData(locationModel.lat, locationModel.lng);
-        _airPollutionFuture = AirPollutionService()
-            .fetchAirPollutionData(locationModel.lat, locationModel.lng);
+        _forecastWeatherFuture = forecastFuture;
+        _airPollutionFuture = pollutionFuture;
       });
     } catch (e) {
       print('Error searching city: $e');
@@ -155,19 +165,52 @@ class _WeatherScreenState extends State<WeatherScreen> {
  
   // 📍 当前天气的展示卡片
   Widget _buildContent() {
-    return FutureBuilder(
-      future: _currentWeatherFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('加载当前天气数据失败: ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          return WeatherCard(weather: snapshot.data);
-        } else {
-          return const Center(child: Text('未能加载当前天气数据'));
-        }
-      },
+    return SizedBox(
+      height: 300,  // 调整整体高度
+      child: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: FutureBuilder(
+                future: _currentWeatherFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('加载当前天气数据失败: ${snapshot.error}'));
+                  } else if (snapshot.hasData) {
+                    return WeatherCard(weather: snapshot.data);
+                  } else {
+                    return const Center(child: Text('未能加载当前天气数据'));
+                  }
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: FutureBuilder(
+                future: _airPollutionFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('加载空气质量数据失败: ${snapshot.error}'));
+                  } else if (snapshot.hasData) {
+                    return AirPollutionCard(pollution: snapshot.data);
+                  } else {
+                    return const Center(child: Text('未能加载空气质量数据'));
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

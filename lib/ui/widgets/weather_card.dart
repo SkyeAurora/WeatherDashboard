@@ -18,8 +18,15 @@ class WeatherCard extends StatelessWidget {
     return weatherTextColors[condition] ?? defaultTextColor;
   }
 
+  String _getWeatherDescription() {
+    return weather.weather[0].description;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final temp = (weather.main.temp - 273.15).toStringAsFixed(1); // 转换为摄氏度
+    final feelsLike = (weather.main.feelsLike - 273.15).toStringAsFixed(1);
+    
     return Card(
       color: _getCardColor(),
       elevation: 4,
@@ -36,7 +43,39 @@ class WeatherCard extends StatelessWidget {
                 color: _getTextColor(),
               ),
             ),
-            // ... 其他现有内容，记得更新文字颜色
+            const SizedBox(height: 8),
+            Text(
+              _getWeatherDescription(),
+              style: TextStyle(
+                fontSize: 18,
+                color: _getTextColor(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      '$temp°C',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: _getTextColor(),
+                      ),
+                    ),
+                    Text(
+                      '体感温度: $feelsLike°C',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _getTextColor(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
