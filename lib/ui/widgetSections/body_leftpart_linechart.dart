@@ -1,66 +1,53 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:weatherdashboard/network/models/forecast_weather_model.dart';
+import 'package:weatherdashboard/constants.dart';
+import '../../network/models/forecast_weather_model.dart';
 import 'package:weatherdashboard/ui/widgetSections/chart.dart';
 
-import '../../constants.dart';
-import '../../network/models/weather_model.dart';
-
 class BodyLeftpartLinechart extends StatelessWidget {
-  final List<ForecastWeather> weather;
+  final List<dynamic> weather;
 
   const BodyLeftpartLinechart({Key? key, required this.weather}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return _buildContentView();
+  Color _getCardColor() {
+    String condition = weather[0].weather[0].main.toLowerCase();
+    return weatherCardColors[condition] ?? defaultCardColor;
   }
 
-  Widget _buildContentView() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [
-            Color(0x881E638D),
-            Color(0x844C9DCC),
+  Color _getTextColor() {
+    String condition = weather[0].weather[0].main.toLowerCase();
+    return weatherTextColors[condition] ?? defaultTextColor;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: _getCardColor(),
+      elevation: 4,
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              '未来天气预报',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: _getTextColor(),
+              ),
+            ),
+            SizedBox(
+              height: 600,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: weather.length * 100.0,
+                  child: Chart(weather: weather),
+                ),
+              ),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: Colors.grey,
-          width: 1.0,
-        ),
-      ),
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        children: [
-          DefaultTextStyle(
-            style: const TextStyle(
-              color: fontColor,
-              fontSize: 24,
-              fontWeight: FontWeight.normal,
-            ),
-            child: Column(
-              children: [
-                Text("天气数据总览表"),
-                SizedBox(
-                  height: 600,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: weather.length * 100.0,
-                      child: Chart(weather: weather),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

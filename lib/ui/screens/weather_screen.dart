@@ -39,20 +39,36 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  LocationModel locationModel=LocationModel(lat: 32.1299,lng: 108.8278);
+  LocationModel locationModel = LocationModel(lat: 32.1299,lng: 108.8278);
   late Future<dynamic> _currentWeatherFuture;
   late Future<dynamic> _forecastWeatherFuture;
   late Future<dynamic> _airPollutionFuture;
+  String _currentWeatherCondition = 'clouds'; // 默认值为常见的天气状态
+  
   @override
   void initState() {
     super.initState();
     _currentWeatherFuture =
         CurrentWeatherService().fetchWeatherData(locationModel.lat, locationModel.lng);
+    _updateInitialWeather(); // 添加初始天气状态更新
     _forecastWeatherFuture =
         ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
     _airPollutionFuture =
         AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);
+  }
 
+  // 添加新方法来更新初始天气状态
+  void _updateInitialWeather() async {
+    try {
+      final weatherData = await _currentWeatherFuture;
+      if (mounted) {
+        setState(() {
+          _currentWeatherCondition = weatherData.weather[0].main.toLowerCase();
+        });
+      }
+    } catch (e) {
+      print('Error updating initial weather: $e');
+    }
   }
 
   void _handleCitySearch(String cityName) async{
@@ -63,49 +79,54 @@ class _WeatherScreenState extends State<WeatherScreen> {
     CurrentWeatherModel currentWeatherModel1=await _currentWeatherFuture;
     currentWeatherModel1.name=cityName;
     setState(() {
-    _currentWeatherFuture=Future.value(currentWeatherModel1);
-    _forecastWeatherFuture =
-        ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
-    _airPollutionFuture =
-        AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);  
+      _currentWeatherCondition = currentWeatherModel1.weather[0].main.toLowerCase();
+      _currentWeatherFuture=Future.value(currentWeatherModel1);
+      _forecastWeatherFuture =
+          ForecastWeatherService().fetchForecastWeatherData(locationModel.lat, locationModel.lng);
+      _airPollutionFuture =
+          AirPollutionService().fetchAirPollutionData(locationModel.lat, locationModel.lng);  
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TopBar(
-        onCitySearch: _handleCitySearch,
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _buildContent(),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: _buildLeftBody(),
-                    ),
-                  ],
-                )
-              ],
-            ), // 主要内容
-          ),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                  height: 60,
-                  color: const Color.fromARGB(255, 106, 61, 165), // 设置矩形的颜色
-                  child: _buildBottomInfoView()
+    return VideoBackgroundPage(
+      weatherCondition: _currentWeatherCondition,
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // 使 Scaffold 背景透明
+        appBar: TopBar(
+          onCitySearch: _handleCitySearch,
+        ),
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  _buildContent(),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _buildLeftBody(),
+                      ),
+                    ],
+                  )
+                ],
+              ), // 主要内容
+            ),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                    height: 60,
+                    color: const Color.fromARGB(255, 106, 61, 165), // 设置矩形的颜色
+                    child: _buildBottomInfoView()
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

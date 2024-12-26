@@ -4,7 +4,7 @@ import '../../../constants.dart';
 import '../../network/models/forecast_weather_model.dart';
 
 class Chart extends StatelessWidget {
-  final List<ForecastWeather> weather;
+  final List<dynamic> weather;
 
   const Chart({Key? key, required this.weather}) : super(key: key);
 
